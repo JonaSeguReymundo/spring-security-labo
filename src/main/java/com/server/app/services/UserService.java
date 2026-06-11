@@ -44,6 +44,54 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // Metodo para el Login
+    public User login(String username, String password) {
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new ConfictException("Contraseña incorrecta");
+        }
+
+        if (user.isBlocked()) {
+            throw new ConfictException("El usuario está bloqueado");
+        }
+
+        return user;
+    }
+
+    // Metodo para actualizar perfil
+    @Transactional
+    public User updateProfile(int userId, UserUpdateDto dto) {
+        User user = findById(userId);
+
+        if (dto.getUsername() != null) {
+            uniqueUsername(dto.getUsername(), userId);
+            user.setUsername(dto.getUsername());
+        }
+        if (dto.getName() != null) user.setName(dto.getName());
+        if (dto.getSurname() != null) user.setSurname(dto.getSurname());
+        if (dto.getEmail() != null) {
+            uniqueEmail(dto.getEmail(), userId);
+            user.setEmail(dto.getEmail());
+        }
+
+        return userRepository.save(user);
+    }
+
+    // Metodo para actualizar password
+    @Transactional
+    public void updatePassword(int userId, String oldPassword, String newPassword) {
+        User user = findById(userId);
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ConfictException("La contraseña anterior no coincide");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     public Page<User> findAll(int page, int size, String search) {
         return userRepository.findAll(PageRequest.of(page, size), search);
     }
