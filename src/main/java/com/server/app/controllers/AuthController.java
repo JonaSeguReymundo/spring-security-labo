@@ -61,9 +61,23 @@ public class AuthController {
     }
 
     @PutMapping("/update/password")
-    public ResponseEntity<User> updatePassword(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> body) {
         int userId = getAuthenticatedUserId();
-        userService.updatePassword(userId, body.get("oldpassword"), body.get("newpassword"));
+
+        String oldPassword = body.get("oldpassword");
+        String newPassword = body.get("newpassword");
+        String confirmPassword = body.get("confirmpassword");
+
+        if (oldPassword == null || newPassword == null || confirmPassword == null) {
+            throw new RuntimeException("Todos los campos son obligatorios");
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new RuntimeException("La nueva contraseña y la confirmación no coinciden");
+        }
+
+        userService.updatePassword(userId, oldPassword, newPassword);
+
         return ResponseEntity.ok(userService.findById(userId));
     }
 
