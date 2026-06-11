@@ -41,22 +41,16 @@ public class FinanzasController {
 
     @GetMapping("/movimientos")
     public ResponseEntity<?> listarMovimientos(Pageable pageable) {
-        // En lugar de buscar por CuentaUserId directamente,
-        // primero busca las cuentas del usuario y luego los movimientos.
-        // O mejor aún, usa un método de repositorio que busque movimientos
-        // donde la cuenta.user.id sea igual al usuario logueado.
-
         return ResponseEntity.ok(movRepo.findByCuentaUserId(getAuthenticatedUserId(), pageable));
     }
 
     @Transactional
     @PostMapping("/transferencias")
     public ResponseEntity<?> realizarTransferencia(@RequestBody Map<String, Object> body) {
-        // Extraer datos del JSON
         int idOrigen = (int) body.get("cuentaOrigenId");
         int idDestino = (int) body.get("cuentaDestinoId");
         BigDecimal monto = new BigDecimal(body.get("monto").toString());
-        int categoriaId = (int) body.get("categoriaId"); // Nueva línea para recibir la categoría
+        int categoriaId = (int) body.get("categoriaId");
 
         // 1. Validar existencia
         Cuenta origen = cuentaRepo.findById(idOrigen).orElseThrow();
